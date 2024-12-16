@@ -10,12 +10,13 @@ $userPosition = htmlspecialchars($_SESSION['position']);
 // Prepare the query using parameterized statement
 // Modify the SQL query// Modify the SQL query and binding
 $stmt = $conn->prepare("SELECT * FROM messages WHERE username = ? OR sent_to = ? ORDER BY created_at ASC");
-$stmt->bind_param("ss", $username, $username, );
+$stmt->bind_param("ss", $username, $username,);
 $stmt->execute();
 $result = $stmt->get_result();
 ?>
 <!DOCTYPE html>
 <html lang="en" class="h-100">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -31,13 +32,14 @@ $result = $stmt->get_result();
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
     <script src="https://js.pusher.com/8.2.0/pusher.min.js"></script>
     <style>
-        html, body {
+        html,
+        body {
             height: 100vh;
             margin: 0;
             padding: 0;
             overflow: hidden;
         }
-        
+
         .chat-wrapper {
             height: 100vh;
             display: flex;
@@ -57,6 +59,7 @@ $result = $stmt->get_result();
         }
     </style>
 </head>
+
 <body>
     <div class="chat-wrapper">
         <!-- Messages Container -->
@@ -69,14 +72,14 @@ $result = $stmt->get_result();
                     $position = $isCurrentUser ? "me-2 ms-auto text-end" : "ms-2 me-auto text-start";
                     $messageStyle = "max-width: 70%";
                     $containerStyle = $isCurrentUser ? "d-flex flex-column align-items-end mb-3" : "d-flex flex-column align-items-start mb-3";
-                    
+
                     echo '<div class="' . $containerStyle . '">';
                     echo '  <div class="message-item p-2 px-3 text-break ' . $color . '" style="' . $messageStyle . '">';
                     echo '      <span class="d-inline-block">' . htmlspecialchars($row['message']) . '</span>';
                     echo '  </div>';
-                    echo '  <small class="text-muted ' . $position . '" title="' . htmlspecialchars($row['created_at']) . '">' . 
-                            date('h:i A', strtotime($row['created_at'])) . 
-                         '</small>';
+                    echo '  <small class="text-muted ' . $position . '" title="' . htmlspecialchars($row['created_at']) . '">' .
+                        date('h:i A', strtotime($row['created_at'])) .
+                        '</small>';
                     echo '</div>';
                 }
                 ?>
@@ -86,19 +89,19 @@ $result = $stmt->get_result();
         <!-- Input Container -->
         <div class="message-input-container">
             <form id="messageForm" action="process.php" method="post" class="d-flex gap-2">
-                <input type="text" 
-                       id="messageInput"
-                       placeholder="Type a message..." 
-                       name="message" 
-                       class="form-control" 
-                       required
-                       maxlength="1000"
-                       autocomplete="off">
-                <input type="hidden" name="sent_to" value="<?PHP echo isset($_GET["adminto"])? $_GET['adminto'] : "admin" ?>">
+                <input type="text"
+                    id="messageInput"
+                    placeholder="Type a message..."
+                    name="message"
+                    class="form-control"
+                    required
+                    maxlength="1000"
+                    autocomplete="off">
+                <input type="hidden" name="sent_to" value="<?PHP echo isset($_GET["adminto"]) ? $_GET['adminto'] : "admin" ?>">
                 <button type="submit" class="btn btn-primary px-3" id="sendButton"><i class="ri-send-plane-2-fill"></i></button>
             </form>
         </div>
-    </div> 
+    </div>
     <script>
         // Configuration
         const CONFIG = {
@@ -145,7 +148,7 @@ $result = $stmt->get_result();
                     .replace(/"/g, "&quot;")
                     .replace(/'/g, "&#039;");
             },
-            
+
             debounce: (func, wait) => {
                 let timeout;
                 return function executedFunction(...args) {
@@ -175,9 +178,9 @@ $result = $stmt->get_result();
                 const color = isCurrentUser ? "bg-primary text-white rounded-3" : "bg-secondary text-white rounded-3";
                 const position = isCurrentUser ? "me-2 ms-auto text-end" : "ms-2 me-auto text-start";
                 const containerStyle = isCurrentUser ? "d-flex flex-column align-items-end mb-3" : "d-flex flex-column align-items-start mb-3";
-                
+
                 return `
-                    <div class="${containerStyle}">
+                    <div class="${containerStyle}">                            
                         <div class="message-item p-2 px-3 text-break ${color}" style="max-width: 70%">
                             <span class="d-inline-block">${utils.escapeHtml(data.message)}</span>
                         </div>
@@ -189,15 +192,23 @@ $result = $stmt->get_result();
             },
 
             addMessage: (data) => {
-                // Check if the message is intended for the current user or sent by the current user
-                if ((data.sent_to === CURRENT_USER.username || data.username === CURRENT_USER.username)) {
+                // Debugging: Log data to verify values
+                var reciver = data.sent_to;
+                var sender = CURRENT_USER.username;
+                console.log("Received data:", "]" + reciver + "[");
+                console.log("CURRENT_USER.username:", "]" + sender + "[");
+
+                if (data.sent_to === CURRENT_USER.username || data.username === CURRENT_USER.username) {
                     elements.messageHolder.insertAdjacentHTML('beforeend', messageHandler.createMessageElement(data));
-                    
+
                     if (!state.isUserScrolling) {
                         scrollHandler.scrollToBottom();
                     }
+                } else {
+                    console.log("Message not relevant to current user.");
                 }
             }
+
         };
 
         // Scroll handling
@@ -210,9 +221,9 @@ $result = $stmt->get_result();
             handleScroll: utils.debounce(() => {
                 const scrollPosition = elements.chatContainer.scrollTop + elements.chatContainer.clientHeight;
                 const isNearBottom = (elements.chatContainer.scrollHeight - scrollPosition) < CONFIG.SCROLL_THRESHOLD;
-                
+
                 state.isUserScrolling = !isNearBottom;
-                
+
             }, CONFIG.DEBOUNCE_DELAY)
         };
 
@@ -221,7 +232,7 @@ $result = $stmt->get_result();
             handleSubmit: async (e) => {
                 e.preventDefault();
                 const message = elements.messageInput.value.trim();
-                
+
                 if (!message || message.length > CONFIG.MAX_MESSAGE_LENGTH) {
                     return;
                 }
@@ -273,7 +284,7 @@ $result = $stmt->get_result();
             // Event listeners
             elements.messageForm.addEventListener('submit', formHandler.handleSubmit);
             elements.chatContainer.addEventListener('scroll', scrollHandler.handleScroll);
-            
+
             // Input validation and character count
             elements.messageInput.addEventListener('input', (e) => {
                 const remainingChars = CONFIG.MAX_MESSAGE_LENGTH - e.target.value.length;
@@ -283,8 +294,7 @@ $result = $stmt->get_result();
             });
 
             // Handle connection status
-            pusher.connection.bind('connected', () => {
-            });
+            pusher.connection.bind('connected', () => {});
 
             pusher.connection.bind('disconnected', () => {
                 toastr.warning('Connection lost. Trying to reconnect...');
@@ -319,4 +329,5 @@ $result = $stmt->get_result();
         document.addEventListener('DOMContentLoaded', init);
     </script>
 </body>
+
 </html>
